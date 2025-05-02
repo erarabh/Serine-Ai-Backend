@@ -6,11 +6,7 @@
   "scripts": {
   "start": "node server/index.js",
   "test": "jest"
-<<<<<<< HEAD
-  },
-=======
-},
->>>>>>> 85540d998a4f2dced2386e98359967a08e8d3ed0
+  },												
   "dependencies": {
     "@supabase/supabase-js": "^2.49.4",
     "axios": "^1.8.4",
