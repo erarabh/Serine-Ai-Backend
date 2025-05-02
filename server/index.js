@@ -9,12 +9,18 @@ dotenv.config();
 const app = express();
 const port = 5000;
 
+<<<<<<< HEAD
 import cors from 'cors';
+=======
+>>>>>>> 85540d998a4f2dced2386e98359967a08e8d3ed0
 app.use(cors({
   origin: "https://serine-ai.vercel.app", // Only allow your Vercel-hosted frontend
   methods: ["GET", "POST"]
 }));
+<<<<<<< HEAD
 
+=======
+>>>>>>> 85540d998a4f2dced2386e98359967a08e8d3ed0
 app.use(express.json());
 
 // Middleware CSP à appliquer pour toutes les routes
