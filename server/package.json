@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node index.js",
     "test": "jest"
-  },												
+  },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.4",
     "axios": "^1.8.4",
