@@ -26,7 +26,15 @@ app.use((req, res, next) => {
   );
   next();
 });
+// Temporary debugging middleware to log the CSP header for every request
+								 
+							 
 
+app.use((req, res, next) => {
+  // Log after the header has been set.
+  console.log("CSP for this request:", res.getHeader("Content-Security-Policy"));
+  next();
+});
 // Utilisation des routeurs
 app.use('/api/site', siteRouter);
 app.use('/chat', chatRouter);
