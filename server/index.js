@@ -12,8 +12,9 @@ const port = 5000;
 
 
 app.use(cors({
-  origin: "https://serine-ai.vercel.app", // Only allow your Vercel-hosted frontend
-  methods: ["GET", "POST"]
+  origin: "https://serine-ai.vercel.app",  // Allow Vercel frontend requests
+  methods: ["GET", "POST"],
+  allowedHeaders: ["Content-Type"]
 }));
 app.use(express.json());
 
@@ -21,7 +22,7 @@ app.use(express.json());
 app.use((req, res, next) => {
   res.setHeader(
     "Content-Security-Policy",
-    "default-src 'self'; font-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; connect-src 'self' https://api.openrouter.ai"
+    "default-src 'self'; font-src 'self' data:; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; connect-src 'self' https://api.openrouter.ai https://serine-ai-backend-production.up.railway.app"
   );
   next();
 });
