@@ -1,47 +1,28 @@
-// routes/chat.js
+// server/routes/chat.js
 import express from 'express';
-import axios from 'axios';
-import dotenv from 'dotenv';
-
-dotenv.config();
+import { processChatRequest } from '../controllers/chatController.js';
+							
+		
 const router = express.Router();
 
 router.post('/', async (req, res) => {
-  const { messages } = req.body;
+  const { clientId, sessionId, messages } = req.body;
 
-  if (!messages || !Array.isArray(messages)) {
-    return res.status(400).json({ error: "Missing or invalid 'messages' array." });
+  if (!clientId || !messages || !Array.isArray(messages) || messages.length === 0) {
+    return res.status(400).json({ error: "Missing required fields: clientId and a non-empty messages array." });
   }
 
+  // We assume that the latest message (i.e. last element in messages) is the user's latest query.
+  const lastMessage = messages[messages.length - 1].content;
+
   try {
-    const openrouterRes = await axios.post(
-      'https://openrouter.ai/api/v1/chat/completions', // make sure this is the correct endpoint
-      {
-        model: 'deepseek/deepseek-r1:free',
-        messages: messages,
-      },
-      {
-        headers: {
-          Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`,
-          'Content-Type': 'application/json',
-        },
-        timeout: 30000, // set a 30-second timeout to prevent hanging
-      }
-    );
-
-    console.log("🔑 OPENROUTER_API_KEY:", process.env.OPENROUTER_API_KEY);
-    console.log('✅ OpenRouter response:', openrouterRes.data);
-
-    const aiMessage = openrouterRes?.data?.choices?.[0]?.message?.content;
-
-    if (!aiMessage) {
-      return res.status(500).json({ error: 'No message from AI.' });
-    }
-
-    res.json({ message: aiMessage });
+    const answer = await processChatRequest(clientId, sessionId, lastMessage);
+    // If sessionId was not provided, the controller may generate one (here we simply echo back the one provided or a fallback string)
+    res.json({ message: answer, sessionId: sessionId || "generated-session-id" });
+									 
   } catch (error) {
-    console.error('❌ Error from OpenRouter:', error?.response?.data || error.message);
-    res.status(500).json({ error: 'Failed to get response from AI.' });
+    console.error("Error processing chat request:", error);
+    res.status(500).json({ error: "Internal Server Error" });
   }
 });
 
