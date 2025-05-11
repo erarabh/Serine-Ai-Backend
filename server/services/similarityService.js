@@ -1,19 +1,23 @@
 // server/services/similarityService.js
 
-// Calculate a similarity score based on how many keywords are present in both the query and the website content.
+/**
+ * Calculate a similarity score based on how many keywords appear in both the query and the website content.
+ * We have expanded the keywords list to include synonyms for each target field.
+ */
 export const calculateSimilarity = (userMessage, websiteContent) => {
-  // Expanded keywords array to cover different phrasings.
+  // Expanded keywords across multiple fields.
   const keywords = [
-    "serene smartwatch",
-    "price",
-    "availability",
-    "specifications",
-    "warranty",
-    "return",
-    "product name",
-    "description"
+    "serene smartwatch", // product identifier
+    "price", "cost",     // price synonyms
+    "availability", "available", // availability synonyms
+    "specifications",    // specs
+    "warranty",          // warranty-related
+    "return",            // return info
+    "product name", "name", "product",  // product name synonyms
+    "description", "details"             // description synonyms
   ];
   let matches = 0;
+  // For each keyword, if it appears both in the user's query and the website content, count as a match.
   keywords.forEach(keyword => {
     if (
       userMessage.toLowerCase().includes(keyword) &&
@@ -22,40 +26,47 @@ export const calculateSimilarity = (userMessage, websiteContent) => {
       matches++;
     }
   });
-  // Each match adds 0.25 to the score, capped at 1.0
+  // Each match adds 0.25, capped at 1.0.
   return Math.min(0.25 * matches, 1.0);
 };
 
-// Extract relevant information from the cached website content based on the query.
-// This function uses simple regex patterns to capture the desired line.
+/**
+ * Extracts relevant information from the cached website content based on the query. 
+ * We try to use regex to capture specific lines from the cached content if available.
+ */
 export const extractRelevantInfo = (userMessage, websiteContent) => {
   const lowerQuery = userMessage.toLowerCase();
   
-  // Look for "price" keyword.
-  if (lowerQuery.includes("price")) {
+  // --- Extract Price ---
+  if (lowerQuery.includes("price") || lowerQuery.includes("cost")) {
     const match = websiteContent.match(/[-\s]*Price:\s*([^\n]+)/i);
     if (match && match[1]) {
       return "Price: " + match[1].trim();
     }
   }
   
-  // Look for "product name". We also check for "name" to catch different phrasings.
-  if (lowerQuery.includes("product name") || lowerQuery.includes("name")) {
+  // --- Extract Product Name ---
+  // Check for multiple product name synonyms.
+  if (
+    lowerQuery.includes("product name") ||
+    lowerQuery.includes("name") ||
+    lowerQuery.includes("product")
+  ) {
     const match = websiteContent.match(/[-\s]*Product Name:\s*([^\n]+)/i);
     if (match && match[1]) {
       return "Product Name: " + match[1].trim();
     }
   }
   
-  // Look for "description".
-  if (lowerQuery.includes("description")) {
+  // --- Extract Description ---
+  if (lowerQuery.includes("description") || lowerQuery.includes("details")) {
     const match = websiteContent.match(/[-\s]*Description:\s*([^\n]+)/i);
     if (match && match[1]) {
       return "Description: " + match[1].trim();
     }
   }
   
-  // Look for "availability".
+  // --- Extract Availability ---
   if (lowerQuery.includes("availability") || lowerQuery.includes("available")) {
     const match = websiteContent.match(/[-\s]*Availability:\s*([^\n]+)/i);
     if (match && match[1]) {
@@ -63,6 +74,16 @@ export const extractRelevantInfo = (userMessage, websiteContent) => {
     }
   }
   
-  // If no specific extraction was possible, fallback to returning the full website content.
+  // --- Extract Warranty (if needed) ---
+  if (lowerQuery.includes("warranty")) {
+    // Sometimes the warranty info is not in a dedicated "Warranty:" field.
+    // Here we rely on manual FAQ for warranty. Otherwise, you could extend this part.
+    const match = websiteContent.match(/[-\s]*Warranty:\s*([^\n]+)/i);
+    if (match && match[1]) {
+      return "Warranty: " + match[1].trim();
+    }
+  }
+  
+  // If no specific extraction is triggered, return the full cached content.
   return websiteContent;
 };
