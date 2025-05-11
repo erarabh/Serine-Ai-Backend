@@ -21,7 +21,7 @@ export const processChatRequest = async (clientId, sessionId, userMessage) => {
 
     // 4. Calculate a similarity score between the query and website content.
     const similarityScore = calculateSimilarity(userMessage, websiteContent);
-    const threshold = 0.5; // Adjust this threshold based on your testing
+    const threshold = 0.4; // Adjust this threshold based on your testing
 
     if (similarityScore >= threshold) {
       // 5. If the match is strong enough, extract the relevant information and return it.

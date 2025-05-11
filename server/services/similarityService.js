@@ -13,7 +13,7 @@ export const calculateSimilarity = (userMessage, websiteContent) => {
     }
   });
   // For demonstration: each match adds 0.2 to the score.
-  return Math.min(0.2 * matches, 1.0);
+  return Math.min(0.25) * matches, 1.0);
 };
 
 export const extractRelevantInfo = (userMessage, websiteContent) => {
