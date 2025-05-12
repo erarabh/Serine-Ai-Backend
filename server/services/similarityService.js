@@ -1,5 +1,3 @@
-// server/services/similarityService.js
-
 /**
  * Calculate a similarity score based on how many keywords appear in both the query and the website content.
  * The keywords array contains synonyms and relevant words for different fields.
@@ -22,10 +20,12 @@ export const calculateSimilarity = (userMessage, websiteContent) => {
       websiteContent.toLowerCase().includes(keyword)
     ) {
       matches++;
+      console.log(`Matched keyword: "${keyword}" (Total matches: ${matches})`);
     }
   });
-  // Each match adds 0.25 to the score, capped at 1.0.
-  return Math.min(0.25 * matches, 1.0);
+  const simScore = Math.min(0.25 * matches, 1.0);
+  console.log(`Calculated similarity score: ${simScore}`);
+  return simScore;
 };
 
 /**
@@ -34,12 +34,14 @@ export const calculateSimilarity = (userMessage, websiteContent) => {
  */
 export const extractRelevantInfo = (userMessage, websiteContent) => {
   const lowerQuery = userMessage.toLowerCase();
-  
+
   // --- Price extraction ---
   if (lowerQuery.includes("price") || lowerQuery.includes("cost")) {
     const match = websiteContent.match(/[-\s]*Price:\s*([^\n]+)/i);
     if (match && match[1]) {
-      return "Price: " + match[1].trim();
+      const extracted = "Price: " + match[1].trim();
+      console.log(`Extracted Price: ${extracted}`);
+      return extracted;
     }
   }
   
@@ -47,7 +49,9 @@ export const extractRelevantInfo = (userMessage, websiteContent) => {
   if (lowerQuery.includes("availability") || lowerQuery.includes("available")) {
     const match = websiteContent.match(/[-\s]*Availability:\s*([^\n]+)/i);
     if (match && match[1]) {
-      return "Availability: " + match[1].trim();
+      const extracted = "Availability: " + match[1].trim();
+      console.log(`Extracted Availability: ${extracted}`);
+      return extracted;
     }
   }
   
@@ -55,28 +59,32 @@ export const extractRelevantInfo = (userMessage, websiteContent) => {
   if (lowerQuery.includes("description") || lowerQuery.includes("details")) {
     const match = websiteContent.match(/[-\s]*Description:\s*([^\n]+)/i);
     if (match && match[1]) {
-      return "Description: " + match[1].trim();
+      const extracted = "Description: " + match[1].trim();
+      console.log(`Extracted Description: ${extracted}`);
+      return extracted;
     }
   }
   
   // --- Warranty extraction ---
   if (lowerQuery.includes("warranty")) {
-    // If there is a dedicated Warranty field in the content, extract it.
     const match = websiteContent.match(/[-\s]*Warranty:\s*([^\n]+)/i);
     if (match && match[1]) {
-      return "Warranty: " + match[1].trim();
+      const extracted = "Warranty: " + match[1].trim();
+      console.log(`Extracted Warranty: ${extracted}`);
+      return extracted;
     }
   }
   
   // --- Product Name extraction ---
-  // Check for "product name" or "name" here last to avoid interfering with more specific queries.
   if (lowerQuery.includes("product name") || lowerQuery.includes("name")) {
     const match = websiteContent.match(/[-\s]*Product Name:\s*([^\n]+)/i);
     if (match && match[1]) {
-      return "Product Name: " + match[1].trim();
+      const extracted = "Product Name: " + match[1].trim();
+      console.log(`Extracted Product Name: ${extracted}`);
+      return extracted;
     }
   }
   
-  // If none of the specific fields are detected, return the full website content as fallback.
+  console.log("No specific extraction found – returning full website content as fallback.");
   return websiteContent;
 };
