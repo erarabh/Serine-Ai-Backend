@@ -1,19 +1,56 @@
 // server/services/faqService.js
 
-// Hard-coded manual FAQ database.
-const faqDatabase = {
-  "what are the product specifications": "The Serene Smartwatch features a 1.5-inch AMOLED display, 10-hour battery life, and supports both iOS and Android.",
-  "what is the return policy": "Returns are accepted within 30 days of purchase with a valid receipt.",
-  "what is the warranty period": "The product comes with a 2-year warranty covering manufacturing defects."
-};
+import { createClient } from '@supabase/supabase-js';
+import dotenv from 'dotenv';
+import { fileURLToPath } from 'url';
+import { dirname, resolve } from 'path';
 
+// Create __filename and __dirname in ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+// Load .env from root directory (../.env relative to services folder)
+dotenv.config({ path: resolve(__dirname, '..', '.env') });
+
+// Log to verify .env loaded correctly
+console.log('[faqService] ENV loaded from:', resolve(__dirname, '..', '.env'));
+
+// Retrieve Supabase credentials
+const supabaseUrl = process.env.SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_KEY;
+
+// Debug log (optional - remove for production)
+console.log('[faqService] SUPABASE_URL:', supabaseUrl);
+console.log('[faqService] SUPABASE_KEY present:', !!supabaseKey);
+
+// Validate required envs
+if (!supabaseUrl || !supabaseKey) {
+  throw new Error('❌ Missing Supabase credentials. Please check .env configuration.');
+}
+
+// Initialize Supabase client
+const supabase = createClient(supabaseUrl, supabaseKey);
+
+/**
+ * Retrieves a matching answer from FAQs if the user's message contains a known question.
+ */
 export const getManualFAQAnswer = async (clientId, userMessage) => {
+  const { data, error } = await supabase
+    .from('faqs')
+    .select('*')
+    .match({ clientId });
+
+  if (error) {
+    console.error('[faqService] Error fetching FAQs:', error);
+    return null;
+  }
+
   const lowerMessage = userMessage.toLowerCase();
-  // Simple matching: check if the query contains any FAQ keys.
-  for (const question in faqDatabase) {
-    if (lowerMessage.includes(question)) {
-      return faqDatabase[question];
+  for (const faq of data) {
+    if (lowerMessage.includes(faq.question.toLowerCase())) {
+      return faq.answer;
     }
   }
+
   return null;
 };

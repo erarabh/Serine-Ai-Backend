@@ -11,16 +11,22 @@ export const processChatRequest = async (clientId, sessionId, userMessage) => {
     const clientConfig = await getClientConfig(clientId);
 
     // 2. Check for a manual FAQ override (if a match is found, return that answer)
-    const manualAnswer = await getManualFAQAnswer(clientId, userMessage);
-    if (manualAnswer) {
-      return manualAnswer;
-    }
-
+   console.log(`User Query: "${userMessage}"`);
+const manualAnswer = await getManualFAQAnswer(clientId, userMessage);
+if (manualAnswer) {
+  console.log(`Manual FAQ match found: ${manualAnswer}`);
+  return manualAnswer;
+}
+    
     // 3. Retrieve the cached website content for automated matching.
     const websiteContent = await getCachedWebsiteContent(clientConfig.websiteUrl);
+    // After manual FAQ check and before calculating website similarity:
+
 
     // 4. Calculate a similarity score between the query and website content.
-    const similarityScore = calculateSimilarity(userMessage, websiteContent);
+const similarityScore = calculateSimilarity(userMessage, websiteContent);
+console.log(`Calculated similarity score: ${similarityScore}`);   
+    
     const threshold = 0.4; // Adjust this threshold based on your testing
 
     if (similarityScore >= threshold) {
