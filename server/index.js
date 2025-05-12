@@ -3,6 +3,7 @@ import cors from 'cors';
 import dotenv from 'dotenv';
 import chatRouter from './routes/chat.js';
 import siteRouter from './routes/site.js';
+import faqRoutes from './routes/faq.js';
 
 dotenv.config();
 
@@ -34,6 +35,7 @@ app.use((req, res, next) => {
 });
 app.use('/api/site', siteRouter);
 app.use('/chat', chatRouter);
+app.use('/faq', faqRoutes);
 
 app.get('/', (req, res) => {
   res.send('Backend is running...');
