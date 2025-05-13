@@ -19,7 +19,7 @@ console.log('[faqService] ENV loaded from:', resolve(__dirname, '..', '.env'));
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_KEY;
 
-// Debug log (optional - remove in production)
+// Debug log (optional - remove for production)
 console.log('[faqService] SUPABASE_URL:', supabaseUrl);
 console.log('[faqService] SUPABASE_KEY present:', !!supabaseKey);
 
@@ -33,34 +33,55 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 
 /**
  * Retrieves a matching FAQ answer for the given clientId and userMessage.
- * This version uses Supabase's "ilike" operator to perform a case-insensitive, partial match on the FAQ question.
+ * This version uses the "ilike" operator for a case-insensitive, partial match.
+ * It also trims the input and, if needed, falls back to checking for specific keywords like "warranty".
  *
- * Example: A user query "warranty period" will match a FAQ with "What is the warranty period?".
+ * Example: A user query "What is the warranty period?" (trimmed and lowercased)
+ * will first be used in a generic search. If no results are found,
+ * and if the query contains the word "warranty", a fallback search using "%warranty%" is performed.
  */
 export const getManualFAQAnswer = async (clientId, userMessage) => {
-  const lowerMessage = userMessage.toLowerCase();
+  // Trim and lower-case the user message for consistency.
+  const trimmedMessage = userMessage.trim().toLowerCase();
 
-  const { data, error } = await supabase
+  // Primary query: search for FAQ rows where the question is like the entire user query.
+  let { data, error } = await supabase
     .from('faqs')
     .select('*')
     .eq('clientId', clientId)
-    .ilike('question', `%${lowerMessage}%`);
+    .ilike('question', `%${trimmedMessage}%`);
 
   if (error) {
     console.error('[faqService] Error fetching FAQs:', error);
     return null;
   }
 
+  // Log the full data to verify that we are reading from Supabase.
+  console.log('[faqService] Fetched FAQs:', data);
+
   if (data && data.length > 0) {
-    console.log(`FAQ Match Found: ${data[0].question} → ${data[0].answer}`);
-															
-						
-	 
-																						   
-															
+    console.log(`[faqService] FAQ Match Found: ${data[0].question} → ${data[0].answer}`);
     return data[0].answer;
-	  
   }
 
+  // Fallback: if the query contains "warranty", search specifically by this keyword.
+  if (trimmedMessage.includes("warranty")) {
+    console.log('[faqService] No direct match found. Trying warranty fallback...');
+    ({ data, error } = await supabase
+      .from('faqs')
+      .select('*')
+      .eq('clientId', clientId)
+      .ilike('question', `%warranty%`));
+    if (error) {
+      console.error('[faqService] Error fetching FAQs (warranty fallback):', error);
+      return null;
+    }
+    if (data && data.length > 0) {
+      console.log(`[faqService] FAQ (warranty fallback) Match Found: ${data[0].question} → ${data[0].answer}`);
+      return data[0].answer;
+    }
+  }
+
+  // No match found: return null.
   return null;
 };
