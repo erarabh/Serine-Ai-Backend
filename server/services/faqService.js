@@ -43,7 +43,7 @@ export const getManualFAQAnswer = async (clientId, userMessage) => {
   const { data, error } = await supabase
     .from('faqs')
     .select('*')
-    .eq("clientId", clientId)
+    .eq('clientId', clientId)
     .ilike('question', `%${lowerMessage}%`);
 
   if (error) {
