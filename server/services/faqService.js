@@ -50,6 +50,10 @@ export const getManualFAQAnswer = async (clientId, userMessage) => {
     if (lowerMessage.includes(faq.question.toLowerCase())) {
       return faq.answer;
     }
+    // Allow partial matches (e.g., "warranty" should match "What is the warranty period?")
+    if (faq.question.toLowerCase().includes(lowerMessage)) {
+      return faq.answer;
+    } 
   }
 
   return null;
