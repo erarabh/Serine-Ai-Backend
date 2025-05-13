@@ -12,6 +12,7 @@ export const processChatRequest = async (clientId, sessionId, userMessage) => {
 
     // 2. Check for a manual FAQ override (if a match is found, return that answer)
    console.log(`User Query: "${userMessage}"`);
+   console.log("Chat Controller Received clientId:", clientId);
 const manualAnswer = await getManualFAQAnswer(clientId, userMessage);
 if (manualAnswer) {
   console.log(`Manual FAQ match found: ${manualAnswer}`);
