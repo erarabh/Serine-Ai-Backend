@@ -32,8 +32,10 @@ if (!supabaseUrl || !supabaseKey) {
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 /**
- * Helper function to sanitize a string.
- * It removes punctuation, extra spaces, and converts to lowercase.
+ * Helper function to sanitize a string:
+ * - removes punctuation,
+ * - extra spaces, and,
+ * - converts the string to lowercase.
  */
 const sanitize = (str) => {
   return str.replace(/[^\w\s]|_/g, "").replace(/\s+/g, " ").toLowerCase().trim();
@@ -41,19 +43,23 @@ const sanitize = (str) => {
 
 /**
  * Retrieves a matching FAQ answer for the given clientId and userMessage.
- * Uses the "ilike" operator to perform a case-insensitive, partial match on the FAQ question.
- * Returns the answer from the first match found.
+ * Uses the "ilike" operator for a case-insensitive, partial match on the FAQ question.
+ * Updates:
+ * - The query now references the "clientId" column using double quotes (".eq('"clientId"', ...)")
+ *   so that PostgreSQL matches the case-sensitive column name.
+ * - If no direct match is found, and if the sanitized query includes "warranty",
+ *   a fallback query searches generically for "warranty".
  */
 export const getManualFAQAnswer = async (clientId, userMessage) => {
-  // Sanitize the user's query to remove punctuation and extra spaces.
+  // Sanitize the user query.
   const sanitizedMessage = sanitize(userMessage);
   console.log('[faqService] Sanitized user query:', sanitizedMessage);
 
-  // Primary query: search for FAQ rows using the sanitized query.
+  // Primary query: Note the use of .eq('"clientId"', clientId) for a case-sensitive match.
   let { data, error } = await supabase
     .from('faqs')
     .select('*')
-    .eq('clientId', clientId)
+    .eq('"clientId"', clientId)
     .ilike('question', `%${sanitizedMessage}%`);
 
   if (error) {
@@ -61,22 +67,22 @@ export const getManualFAQAnswer = async (clientId, userMessage) => {
     return null;
   }
 
-  // Log the full fetched FAQs for debugging.
+  // Log the fetched FAQs for debugging.
   console.log('[faqService] Fetched FAQs:', data);
 
-  // If there's a match, return the FAQ answer.
+  // If found, return the answer.
   if (data && data.length > 0) {
     console.log(`[faqService] FAQ Match Found: ${data[0].question} → ${data[0].answer}`);
     return data[0].answer;
   }
 
-  // Fallback: if the sanitized query contains "warranty", try a generic warranty search.
+  // Fallback: if the sanitized query contains "warranty", try a fallback query using "%warranty%".
   if (sanitizedMessage.includes("warranty")) {
     console.log('[faqService] No direct match found. Trying warranty fallback...');
     ({ data, error } = await supabase
       .from('faqs')
       .select('*')
-      .eq('clientId', clientId)
+      .eq('"clientId"', clientId)
       .ilike('question', `%warranty%`));
     if (error) {
       console.error('[faqService] Error fetching FAQs (warranty fallback):', error);
@@ -88,6 +94,6 @@ export const getManualFAQAnswer = async (clientId, userMessage) => {
     }
   }
 
-  // If no match is found, return null.
+  // No FAQ match found.
   return null;
 };
